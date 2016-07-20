@@ -14,19 +14,26 @@ import java.net.DatagramPacket;
 public class MainActivity extends AppCompatActivity {
 
     Button send;
+    Button receive;
+    private final int SDK_PERMISSION_REQUEST = 127;
+    private String permissionInfo="";
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        //getPersimmions();
         init();
     }
 
     private void init(){
         WifiManager wm = (WifiManager)getSystemService(Context.WIFI_SERVICE);
+        Log.e("TAG", wm.getConnectionInfo()+"");
         WifiManager.MulticastLock multicastLock = wm.createMulticastLock("multicastLock");
         multicastLock.setReferenceCounted(true);
         multicastLock.acquire();
         send=(Button)findViewById(R.id.send);
+        receive=(Button)findViewById(R.id.receive);
         send.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -34,33 +41,61 @@ public class MainActivity extends AppCompatActivity {
                 new Thread(new Runnable() {
                     @Override
                     public void run() {
-                        SendMSearchMessage();
+
+                        send();
+                    }
+                }).start();
+            }
+        });
+        receive.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+
+                        receive();
                     }
                 }).start();
             }
         });
     }
 
-    private void SendMSearchMessage() {
 
+    private void send(){
         SSDPSearchMsg searchContentDirectory = new SSDPSearchMsg(SSDPConstants.ST_ContentDirectory);
         SSDPSearchMsg searchAVTransport = new SSDPSearchMsg(SSDPConstants.ST_AVTransport);
         SSDPSearchMsg searchProduct = new SSDPSearchMsg(SSDPConstants.ST_Product);
-
-        SSDPSocket sock;
+        SSDPClientSocket sock;
         try {
-            sock = new SSDPSocket();
-            for (int i = 0; i < 2; i++) {
-                sock.send(searchContentDirectory.toString());
-                sock.send(searchAVTransport.toString());
-                sock.send(searchProduct.toString());
-            }
+            sock = new SSDPClientSocket();
+            Log.e("send", "start");
+            sock.send(searchContentDirectory.toString());
+            sock.send(searchAVTransport.toString());
+            sock.send(searchProduct.toString());
+            Log.e("send", searchContentDirectory.toString());
+
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            Log.e("M-SEARCH", e.getMessage());
+
+        }
+    }
+
+    private void receive(){
+
+        SSDPServerSocket sock;
+        try {
+            Log.e("Recieve", "start");
+            sock = new SSDPServerSocket();
 
             while (true) {
                 DatagramPacket dp = sock.receive(); //Here, I only receive the same packets I initially sent above
                 String c = new String(dp.getData());
-                System.out.println(c);
+                Log.e("Recieve", c);
             }
+
         } catch (IOException e) {
             // TODO Auto-generated catch block
             Log.e("M-SEARCH", e.getMessage());

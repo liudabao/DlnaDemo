@@ -1,5 +1,7 @@
 package com.example.lenovo.dlnademo;
 
+import android.util.Log;
+
 /**
  * Created by lenovo on 2016/7/19.
  */
@@ -13,6 +15,7 @@ public class SSDPSearchMsg {
     String mST;     /* Search target */
 
     public SSDPSearchMsg(String ST) {
+        Log.e("msg","start");
         mST = ST;
     }
 
@@ -34,16 +37,20 @@ public class SSDPSearchMsg {
 
     @Override
     public String toString() {
+        Log.e("msg0","tostring");
         StringBuilder content = new StringBuilder();
-
         content.append(SSDPConstants.SL_MSEARCH).append(NEWLINE);
+        Log.e("msg1",content.toString());
         content.append(MAN).append(NEWLINE);
+        Log.e("msg2",content.toString());
         content.append("Mx: " + mMX).append(NEWLINE);
+        Log.e("msg3",content.toString());
         content.append(HOST).append(NEWLINE);
+        Log.e("msg4",content.toString());
         content.append(mST).append(NEWLINE);
+        Log.e("msg5",content.toString());
         content.append(NEWLINE);
-
+        Log.e("msg6",content.toString());
         return content.toString();
     }
-
 }

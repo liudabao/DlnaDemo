@@ -40,7 +40,7 @@ public class HttpUtil {
         return result;
     }
 
-    private static String getHttpRequest(String request){
+    public static String getHttpRequest(String request){
         HttpURLConnection connection = null;
         InputStream inputStream = null;
         try {
