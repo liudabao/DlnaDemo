@@ -18,13 +18,15 @@ public class SSDPClientSocket {
 
     public SSDPClientSocket() throws IOException {
         mSSDPSocket = new MulticastSocket(); //Bind some random port for receiving datagram
+        mSSDPSocket.setLoopbackMode(false);
         broadcastAddress  = InetAddress.getByName(SSDPConstants.ADDRESS);
         mSSDPSocket.joinGroup(broadcastAddress);
     }
 
     /* Used to send SSDP packet */
     public void send(String data) throws IOException {
-        DatagramPacket dp = new DatagramPacket(data.getBytes(), data.length(),
+       // Log.e("send data", data);
+        DatagramPacket dp = new DatagramPacket(data.getBytes("UTF8"), data.length(),
                 broadcastAddress,SSDPConstants.PORT);
 
         mSSDPSocket.send(dp);

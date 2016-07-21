@@ -2,14 +2,19 @@ package com.example.lenovo.dlnademo;
 
 import android.content.Context;
 import android.net.wifi.WifiManager;
+import android.os.Handler;
+import android.os.Message;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.Toast;
 
 import java.io.IOException;
 import java.net.DatagramPacket;
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -17,12 +22,24 @@ public class MainActivity extends AppCompatActivity {
     Button receive;
     private final int SDK_PERMISSION_REQUEST = 127;
     private String permissionInfo="";
-
+    String str;
+    Handler handler;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         //getPersimmions();
+        handler=new Handler(){
+
+            public void handleMessage(Message msg){
+                switch (msg.what){
+                    case 1:showToast(str);
+                        break;
+                }
+
+            }
+
+        };
         init();
     }
 
@@ -38,13 +55,9 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
 
-                new Thread(new Runnable() {
-                    @Override
-                    public void run() {
+                Timer timer=new Timer();
+                timer.schedule(new SendTask(), 3 * 1000, 5 * 1000);
 
-                        send();
-                    }
-                }).start();
             }
         });
         receive.setOnClickListener(new View.OnClickListener() {
@@ -58,23 +71,33 @@ public class MainActivity extends AppCompatActivity {
                         receive();
                     }
                 }).start();
+
             }
         });
     }
 
+    class SendTask extends TimerTask{
+
+        @Override
+        public void run() {
+            send();
+        }
+    }
 
     private void send(){
-        SSDPSearchMsg searchContentDirectory = new SSDPSearchMsg(SSDPConstants.ST_ContentDirectory);
-        SSDPSearchMsg searchAVTransport = new SSDPSearchMsg(SSDPConstants.ST_AVTransport);
-        SSDPSearchMsg searchProduct = new SSDPSearchMsg(SSDPConstants.ST_Product);
+       // SSDPSearchMsg searchContentDirectory = new SSDPSearchMsg(SSDPConstants.ST_ContentDirectory);
+       // SSDPSearchMsg searchAVTransport = new SSDPSearchMsg(SSDPConstants.ST_AVTransport);
+       // SSDPSearchMsg searchProduct = new SSDPSearchMsg(SSDPConstants.ST_Product);
+        SSDPSearchMsg searchRoot=new SSDPSearchMsg(SSDPConstants.ST_RootDevice);
         SSDPClientSocket sock;
         try {
             sock = new SSDPClientSocket();
             Log.e("send", "start");
-            sock.send(searchContentDirectory.toString());
-            sock.send(searchAVTransport.toString());
-            sock.send(searchProduct.toString());
-            Log.e("send", searchContentDirectory.toString());
+            sock.send(searchRoot.toString());
+           // sock.send(searchContentDirectory.toString());
+           // sock.send(searchAVTransport.toString());
+           // sock.send(searchProduct.toString());
+            //Log.e("send", searchContentDirectory.toString());
 
         } catch (IOException e) {
             // TODO Auto-generated catch block
@@ -92,8 +115,12 @@ public class MainActivity extends AppCompatActivity {
 
             while (true) {
                 DatagramPacket dp = sock.receive(); //Here, I only receive the same packets I initially sent above
-                String c = new String(dp.getData());
-                Log.e("Recieve", c);
+                str = new String(dp.getData(),"utf-8");
+                Log.e("Recieve", str);
+                Message msg=new Message();
+                msg.what=1;
+                handler.sendMessage(msg);
+
             }
 
         } catch (IOException e) {
@@ -102,4 +129,9 @@ public class MainActivity extends AppCompatActivity {
 
         }
     }
+
+    private void showToast(String data){
+        Toast.makeText(MainActivity.this, data, Toast.LENGTH_SHORT).show();
+    }
+
 }
