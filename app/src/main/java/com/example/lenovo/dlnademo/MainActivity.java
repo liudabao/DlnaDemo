@@ -11,6 +11,12 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
 
+import org.cybergarage.upnp.ControlPoint;
+import org.cybergarage.upnp.Device;
+import org.cybergarage.upnp.DeviceList;
+import org.cybergarage.upnp.device.SearchResponseListener;
+import org.cybergarage.upnp.ssdp.SSDPPacket;
+
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.util.Timer;
@@ -33,7 +39,9 @@ public class MainActivity extends AppCompatActivity {
 
             public void handleMessage(Message msg){
                 switch (msg.what){
-                    case 1:showToast(str);
+                    case 1:
+                        showToast(str);
+                        Log.e("Recieve", str);
                         break;
                 }
 
@@ -55,8 +63,16 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
 
-                Timer timer=new Timer();
-                timer.schedule(new SendTask(), 3 * 1000, 5 * 1000);
+               // Timer timer=new Timer();
+               // timer.schedule(new SendTask(), 3 * 1000, 5 * 1000);
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Log.e("Device", "find");
+                        find();
+                    }
+                }).start();
+
 
             }
         });
@@ -68,7 +84,7 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public void run() {
 
-                        receive();
+                        //receive();
                     }
                 }).start();
 
@@ -88,15 +104,18 @@ public class MainActivity extends AppCompatActivity {
        // SSDPSearchMsg searchContentDirectory = new SSDPSearchMsg(SSDPConstants.ST_ContentDirectory);
        // SSDPSearchMsg searchAVTransport = new SSDPSearchMsg(SSDPConstants.ST_AVTransport);
        // SSDPSearchMsg searchProduct = new SSDPSearchMsg(SSDPConstants.ST_Product);
-        SSDPSearchMsg searchRoot=new SSDPSearchMsg(SSDPConstants.ST_RootDevice);
+       // SSDPSearchMsg searchRoot=new SSDPSearchMsg(SSDPConstants.ST_RootDevice);
+       // SSDPSearchMsg searchInternet=new SSDPSearchMsg(SSDPConstants.ST_InternetDevice);
+        SSDPSearchMsg searchAll=new SSDPSearchMsg(SSDPConstants.ST_ALL);
         SSDPClientSocket sock;
         try {
             sock = new SSDPClientSocket();
             Log.e("send", "start");
-            sock.send(searchRoot.toString());
+            sock.send(searchAll.toString());
+            //sock.send(searchRoot.toString());
            // sock.send(searchContentDirectory.toString());
            // sock.send(searchAVTransport.toString());
-           // sock.send(searchProduct.toString());
+            //sock.send(searchProduct.toString());
             //Log.e("send", searchContentDirectory.toString());
 
         } catch (IOException e) {
@@ -116,7 +135,7 @@ public class MainActivity extends AppCompatActivity {
             while (true) {
                 DatagramPacket dp = sock.receive(); //Here, I only receive the same packets I initially sent above
                 str = new String(dp.getData(),"utf-8");
-                Log.e("Recieve", str);
+
                 Message msg=new Message();
                 msg.what=1;
                 handler.sendMessage(msg);
@@ -134,4 +153,22 @@ public class MainActivity extends AppCompatActivity {
         Toast.makeText(MainActivity.this, data, Toast.LENGTH_SHORT).show();
     }
 
+
+    private void find(){
+        ControlPoint controlPoint=new ControlPoint();
+        controlPoint.start();
+        controlPoint.addSearchResponseListener(new SearchResponseListener() {
+            @Override
+            public void deviceSearchResponseReceived(SSDPPacket ssdpPacket) {
+                String uuid = ssdpPacket.getUSN();
+                String target = ssdpPacket.getST();
+                String location = ssdpPacket.getLocation();
+                Log.e("Device", uuid);
+                Log.e("Device", target);
+                Log.e("Device", location);
+            }
+        });
+        controlPoint.search("ssdp:all");
+
+    }
 }

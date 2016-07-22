@@ -1,6 +1,7 @@
 package com.example.lenovo.dlnademo;
 
 import android.util.Log;
+import android.util.Xml;
 
 import java.io.IOException;
 import java.net.DatagramPacket;
@@ -25,19 +26,11 @@ public class SSDPClientSocket {
 
     /* Used to send SSDP packet */
     public void send(String data) throws IOException {
-       // Log.e("send data", data);
-        DatagramPacket dp = new DatagramPacket(data.getBytes("UTF8"), data.length(),
+        Log.e("send data", data);
+        DatagramPacket dp = new DatagramPacket(data.getBytes("utf-8"), data.length(),
                 broadcastAddress,SSDPConstants.PORT);
 
         mSSDPSocket.send(dp);
-    }
-
-    /* Used to receive SSDP packet */
-    public DatagramPacket receive() throws IOException {
-        byte[] buf = new byte[1024];
-        DatagramPacket dp = new DatagramPacket(buf, buf.length);
-        mSSDPSocket.receive(dp);
-        return dp;
     }
 
     public void close() {
